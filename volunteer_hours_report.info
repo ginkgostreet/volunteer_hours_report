@@ -1,0 +1,7 @@
+name = Volunteer Hours Report
+description = "Provide Volunteer Log Hours Report that they have registered."
+core = 7.x
+dependencies[] = date:date
+dependencies[] = date:date_popup
+scripts[] = volunteer_hours_report_script.js
+stylesheets[all][] = volunteer_hours_report_style.css

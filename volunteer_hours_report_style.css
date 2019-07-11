@@ -1,0 +1,31 @@
+/**
+ * @file: Volunteer Hours Report Stylesheet
+ *
+ * General style for volunteer hours report block.
+ */
+
+#block-volunteer-hours-report-loghours-block .node-list {
+  list-style-type: none;
+}
+#block-volunteer-hours-report-loghours-block .item-list .pager {
+  margin-top: 10px;
+  font-size: 12px;
+}
+#volunteer-hours-report-form #reset_loghours_form {
+  border: 1px solid #e4e4e4;
+  border-bottom: 1px solid #b4b4b4;
+  border-left-color: #d2d2d2;
+  border-right-color: #d2d2d2;
+  color: #3a3a3a;
+  cursor: pointer;
+  font-size: 0.929em;
+  font-weight: normal;
+  text-align: center;
+  margin-bottom: 1em;
+  margin-right: 0.6em;
+  padding: 4px 17px;
+  -khtml-border-radius: 15px;
+  -moz-border-radius: 20px;
+  -webkit-border-radius: 15px;
+  border-radius: 15px;
+}

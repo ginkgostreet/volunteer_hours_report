@@ -1,0 +1,168 @@
+<?php
+
+/**
+ * @file
+ * Render my loged hours as a volunteer.
+ */
+
+/**
+ * Implements hook_block_info().
+ * This hook is used for generating custom block from custom module.
+ * This block is used for display logged hours for specific contact for any volunteer project.
+ */
+function volunteer_hours_report_block_info() {
+  $blocks = array();
+  $blocks['loghours_block'] = array(
+    'info' => t('Volunteer Log Hours'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ * For generating content of block and set block parameter.
+ */
+function volunteer_hours_report_block_view($delta='') {
+  $block = array();
+
+  // Initialize civicrm in custom module. So we can use civicrm API in custom module.
+  civicrm_initialize();
+  // Get current logged in contact id from session.
+  $session = CRM_Core_Session::singleton();
+  $contact_id = $session->get('userID');
+
+  switch($delta) {
+    case 'loghours_block' :
+      // Check user is already logged in or not.
+      if($contact_id != '0' && $contact_id != NULL) {
+        $block['subject'] = t('My Logged Hours');
+        // Prepare form with date field.
+        $form = drupal_get_form('volunteer_hours_report_form');
+        // Render date field and then append block result.
+        $block['content'] = drupal_render($form);   
+        // Generate report block content and append after search form.
+        $block['content'] .= volunteer_hours_report_content($contact_id);
+      }
+      break;
+  }
+
+  return $block;
+}
+
+
+/**
+ * Custom function to assemble renderable array for block content.
+ * Returns a renderable array with the block content.
+ * @return
+ *   returns a string of block content.
+ */
+function volunteer_hours_report_content($contact_id = "") {
+  // Check if fieldmeta extension is installed or not.
+  // If installed then add crmFieldMetadata module.
+  $checkVolunteerExtensionEnabled = civicrm_api3('Extension', 'get', [
+    'sequential' => 1,
+    'full_name' => "org.civicrm.volunteer",
+    'status' => "installed",
+  ]);
+  // If Volunteer Extension is enabled.
+  if($checkVolunteerExtensionEnabled['count']) {
+    // Prepare sql query for fetch ativity for specific contact.
+    $select = " SELECT activity.*, tgt.contact_id as contact_id, tgt_contact.display_name as display_name, tgt_contact.organization_name as beneficiary_name";
+    $from = " FROM civicrm_activity AS activity";
+    
+    // Join relevant tables.
+    $join = " LEFT JOIN civicrm_activity_contact tgt ON (tgt.activity_id = activity.id AND tgt.record_type_id = 3) ";
+    $join .= " LEFT JOIN civicrm_contact tgt_contact ON tgt.contact_id = tgt_contact.id";
+
+    // Where Condition.
+    $where = " WHERE activity.activity_type_id = 55";
+    // Add condition for logged in user.
+    if(isset($contact_id) && !empty($contact_id)) {
+      $where .= " AND tgt.contact_id = ".$contact_id;
+    }
+    // Get Parameters from url. If since date parameter is set add in where condition.
+    $parameters = drupal_get_query_parameters();
+    if(isset($parameters['since_date']) && !empty($parameters['since_date'])) {
+      $since_date = $parameters['since_date']['date'];
+      $today_date = date('Y-m-d', time());
+      $where .= " AND DATE_FORMAT(activity.activity_date_time,'%Y-%m-%d')>='".$since_date."' and  DATE_FORMAT(activity.activity_date_time,'%Y-%m-%d') <= '".$today_date."'"; 
+    }
+
+    // Order by Logic.
+    $orderByColumn = "activity.id";
+    $order = "ASC";
+
+    // prepare orderby query.
+    $orderby = " ORDER BY " . $orderByColumn . " " . $order;
+    // Merge whole query.
+    $sql = $select . $from . $join . $where . $orderby;
+
+    $dao = new CRM_Core_DAO();
+    $dao->query($sql);
+
+    // Prepare appeal details array with proper format.
+    $result = array();
+    while ($dao->fetch()) {
+      $htmlData = "";
+      $htmlData .= "<br><b>Beneficiary : </b>".$dao->beneficiary_name;
+      $htmlData .= "<br><b>Subject : </b>".$dao->subject;
+      $htmlData .= "<br><b>Activity Date Time : </b>".$dao->activity_date_time;
+      $htmlData .= "<br><b>Duration : </b>".$dao->duration ." Minutes";
+      $result[] = $htmlData;
+    }
+
+    // Initialize the pager.
+    $per_page = 2;
+    $current_page = pager_default_initialize(count($result), $per_page);
+    $paging = theme('pager');
+    $chunks = array_chunk($result, $per_page, TRUE);
+
+    // Pagination Parameters.
+    $title = 'Log Hours';
+    $attributes = array(
+      'id' => 'log-hours',
+    );
+    if(isset($chunks) && !empty($chunks)) {
+      // Show the appropriate items from the list
+      $output = theme('item_list', array('items' =>  $chunks[$current_page], " ", '', 'attributes' => array('class' => 'node-list', 'id' => 'node_list'),));
+
+      // Show the pager
+      $output .= theme('pager', array('quantity',count($result), 'attributes' => array('class' => 'node-pager', 'id' => 'node_pager'),'element' => 0));
+    } else {
+      $output = "<br /><b>No records found.</b>";
+    }
+  }
+
+  return $output;
+}
+
+
+/**
+ * Implements hook_form().
+ * For generating form with field in custom block.
+ * Since Date field add in form.
+ */
+function volunteer_hours_report_form($form, &$form_submit){
+
+  $parameters = drupal_get_query_parameters();
+  $default_date = date('Y-m-d', time());
+  if(isset($parameters['since_date']) && !empty($parameters['since_date'])) {
+    $default_date = $parameters['since_date']['date'];
+  }
+  $form['#method'] = 'get';
+  $form['since_date'] = array(
+    '#type' => 'date_popup',
+    '#date_format' => 'Y-m-d',
+    '#title' => "Since",
+    '#required' => TRUE,
+    '#default_value' => date('Y-m-d', strtotime($default_date)),
+  );
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Go'));
+  $form['buttons']['reset'] = array(
+    '#markup' => '<input '. drupal_attributes(array('type' => 'button', 'value' => t('Reset') )) .' id="reset_loghours_form" />',
+  );
+
+  return $form;
+}
