@@ -1,9 +1,48 @@
 <?php
-
 /**
  * @file
- * Render my loged hours as a volunteer.
+ * Render My Logged Hours as a volunteer.
  */
+
+/**
+ * Implements hook_menu().
+ * This hook is adding one menu link for configuration page of this plugin.
+ */
+function volunteer_hours_report_menu() {
+
+  $items = array();
+
+  $items['admin/settings/volunteer_hours_report'] = array(
+    'title' => 'On this date module settings',
+    'description' => 'Description of your On this date settings page',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('volunteer_hours_report_admin'),
+    'access arguments' => array('administer onthisdate settings'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+
+  return $items;
+}
+
+
+/**
+ * This function is prepare one configuration form in which admin can set pagination limit.
+ */
+function volunteer_hours_report_admin() {
+  $form = array();
+
+  $form['page_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Page Limit'),
+    '#default_value' => variable_get('page_limit', 10),
+    '#size' => 2,
+    '#description' => t("Pagination limit Log Hours Report."),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
 
 /**
  * Implements hook_block_info().
@@ -109,12 +148,13 @@ function volunteer_hours_report_content($contact_id = "") {
       $htmlData .= "<br><b>Beneficiary : </b>".$dao->beneficiary_name;
       $htmlData .= "<br><b>Subject : </b>".$dao->subject;
       $htmlData .= "<br><b>Activity Date Time : </b>".$dao->activity_date_time;
-      $htmlData .= "<br><b>Duration : </b>".$dao->duration ." Minutes";
+      $htmlData .= "<br><b>Duration : </b>".$dao->duration ." Mins";
       $result[] = $htmlData;
     }
 
     // Initialize the pager.
-    $per_page = 2;
+    // Get pagination limit from plugin configuration page.
+    $per_page = variable_get('page_limit');
     $current_page = pager_default_initialize(count($result), $per_page);
     $paging = theme('pager');
     $chunks = array_chunk($result, $per_page, TRUE);

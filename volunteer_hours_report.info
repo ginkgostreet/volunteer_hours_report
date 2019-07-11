@@ -5,3 +5,5 @@ dependencies[] = date:date
 dependencies[] = date:date_popup
 scripts[] = volunteer_hours_report_script.js
 stylesheets[all][] = volunteer_hours_report_style.css
+
+configure = admin/settings/volunteer_hours_report
