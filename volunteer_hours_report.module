@@ -13,8 +13,8 @@ function volunteer_hours_report_menu() {
   $items = array();
 
   $items['admin/settings/volunteer_hours_report'] = array(
-    'title' => 'On this date module settings',
-    'description' => 'Description of your On this date settings page',
+    'title' => 'Volunteer Hours Report',
+    'description' => 'Manage Configuration of volunteer hours report.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('volunteer_hours_report_admin'),
     'access arguments' => array('administer onthisdate settings'),
@@ -39,7 +39,7 @@ function volunteer_hours_report_admin() {
     '#title' => t('Page Limit'),
     '#default_value' => variable_get('report_page_limit', 10),
     '#size' => 2,
-    '#description' => t("Pagination limit Log Hours Report."),
+    '#description' => t("Pagination limit for Log Hours Report Block."),
     '#required' => TRUE,
   );
 
