@@ -30,11 +30,14 @@ function volunteer_hours_report_menu() {
  */
 function volunteer_hours_report_admin() {
   $form = array();
-
-  $form['page_limit'] = array(
+  $per_page = variable_get('report_page_limit');
+  if(!$per_page && empty($per_page)) {
+    variable_set('report_page_limit', 10);
+  }
+  $form['report_page_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Page Limit'),
-    '#default_value' => variable_get('page_limit', 10),
+    '#default_value' => variable_get('report_page_limit', 10),
     '#size' => 2,
     '#description' => t("Pagination limit Log Hours Report."),
     '#required' => TRUE,
@@ -154,7 +157,11 @@ function volunteer_hours_report_content($contact_id = "") {
 
     // Initialize the pager.
     // Get pagination limit from plugin configuration page.
-    $per_page = variable_get('page_limit');
+    $per_page = variable_get('report_page_limit');
+    if(!$per_page && empty($per_page)) {
+      variable_set('report_page_limit', 10);
+      $per_page = variable_get('report_page_limit');
+    }
     $current_page = pager_default_initialize(count($result), $per_page);
     $paging = theme('pager');
     $chunks = array_chunk($result, $per_page, TRUE);
