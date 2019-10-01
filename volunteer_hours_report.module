@@ -95,6 +95,9 @@ function volunteer_hours_report_block_view($delta='') {
   return $block;
 }
 
+function volunteer_hours_report_default_since_date() {
+  return date('Y-m-d', strtotime('-1 week'));
+}
 
 /**
  * Custom function to assemble renderable array for block content.
@@ -129,11 +132,12 @@ function volunteer_hours_report_content($contact_id = "") {
     }
     // Get Parameters from url. If since date parameter is set add in where condition.
     $parameters = drupal_get_query_parameters();
+    $today_date = date('Y-m-d', time());
+    $since_date = volunteer_hours_report_default_since_date();
     if(isset($parameters['since_date']) && !empty($parameters['since_date'])) {
       $since_date = $parameters['since_date']['date'];
-      $today_date = date('Y-m-d', time());
-      $where .= " AND DATE_FORMAT(activity.activity_date_time,'%Y-%m-%d')>='".$since_date."' and  DATE_FORMAT(activity.activity_date_time,'%Y-%m-%d') <= '".$today_date."'"; 
     }
+    $where .= " AND DATE_FORMAT(activity.activity_date_time,'%Y-%m-%d')>='".$since_date."' and  DATE_FORMAT(activity.activity_date_time,'%Y-%m-%d') <= '".$today_date."'"; 
 
     // Order by Logic.
     $orderByColumn = "activity.id";
@@ -197,9 +201,9 @@ function volunteer_hours_report_content($contact_id = "") {
 function volunteer_hours_report_form($form, &$form_submit){
 
   $parameters = drupal_get_query_parameters();
-  $default_date = date('Y-m-d', strtotime('-1 week'));
+  $default_date = volunteer_hours_report_default_since_date();
   if(isset($parameters['since_date']) && !empty($parameters['since_date'])) {
-    $default_date = $parameters['since_date']['date'];
+    $default_date = date('Y-m-d', strtotime($parameters['since_date']['date']));
   }
   $form['#method'] = 'get';
   $form['since_date'] = array(
@@ -207,7 +211,7 @@ function volunteer_hours_report_form($form, &$form_submit){
     '#date_format' => 'Y-m-d',
     '#title' => "Since",
     '#required' => TRUE,
-    '#default_value' => date('Y-m-d', strtotime($default_date)),
+    '#default_value' => $default_date,
   );
   $form['submit'] = array('#type' => 'submit', '#value' => t('Go'));
   $form['buttons']['reset'] = array(
