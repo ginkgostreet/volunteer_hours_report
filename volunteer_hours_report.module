@@ -168,7 +168,7 @@ function volunteer_hours_report_content($contact_id = "") {
     $result = array();
     while ($dao->fetch()) {
       $htmlData = "";
-      $htmlData .= "<br><b>Beneficiary : </b>".$dao->beneficiary;
+      $htmlData .= "<br><b>Partner : </b>".$dao->beneficiary;
       $htmlData .= "<br><b>Subject : </b>".$dao->subject;
       $htmlData .= "<br><b>Date and Time : </b>".$dao->activity_date_time;
       $htmlData .= "<br><b>Duration : </b>".$dao->duration ." Mins";
