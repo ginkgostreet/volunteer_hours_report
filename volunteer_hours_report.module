@@ -209,7 +209,7 @@ function volunteer_hours_report_form($form, &$form_submit){
   $form['since_date'] = array(
     '#type' => 'date_popup',
     '#date_format' => 'Y-m-d',
-    '#title' => "Since",
+    '#title' => "Since Date",
     '#required' => TRUE,
     '#default_value' => $default_date,
   );

@@ -29,3 +29,7 @@
   -webkit-border-radius: 15px;
   border-radius: 15px;
 }
+
+#volunteer-hours-report-form .form-item-since-date-date label {
+  display: none;
+}
