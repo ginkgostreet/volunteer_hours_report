@@ -197,7 +197,7 @@ function volunteer_hours_report_content($contact_id = "") {
 function volunteer_hours_report_form($form, &$form_submit){
 
   $parameters = drupal_get_query_parameters();
-  $default_date = date('Y-m-d', time());
+  $default_date = date('Y-m-d', strtotime('-1 week'));
   if(isset($parameters['since_date']) && !empty($parameters['since_date'])) {
     $default_date = $parameters['since_date']['date'];
   }
