@@ -4,6 +4,8 @@
  * Render My Logged Hours as a volunteer.
  */
 
+define("LOG_ACTIVITY_TYPE", 66);
+
 /**
  * Implements hook_menu().
  * This hook is adding one menu link for configuration page of this plugin.
@@ -114,12 +116,13 @@ function volunteer_hours_report_content($contact_id = "") {
     $select = " SELECT activity.*, tgt.contact_id as contact_id, tgt_contact.display_name as display_name, tgt_contact.organization_name as beneficiary_name";
     $from = " FROM civicrm_activity AS activity";
     
-    // Join relevant tables.
-    $join = " LEFT JOIN civicrm_activity_contact tgt ON (tgt.activity_id = activity.id AND tgt.record_type_id = 3) ";
+    // Join contacts through activity_contact table:
+    // `record_type_id` int(10) unsigned DEFAULT NULL COMMENT ' 1 assignee, 2 creator, 3 focus or target.'
+    $join = " LEFT JOIN civicrm_activity_contact tgt ON (tgt.activity_id = activity.id AND tgt.record_type_id = 1) ";
     $join .= " LEFT JOIN civicrm_contact tgt_contact ON tgt.contact_id = tgt_contact.id";
 
     // Where Condition.
-    $where = " WHERE activity.activity_type_id = 55";
+    $where = " WHERE activity.activity_type_id = ". LOG_ACTIVITY_TYPE . " ";
     // Add condition for logged in user.
     if(isset($contact_id) && !empty($contact_id)) {
       $where .= " AND tgt.contact_id = ".$contact_id;
