@@ -118,19 +118,30 @@ function volunteer_hours_report_content($contact_id = "") {
   // If Volunteer Extension is enabled.
   if($checkVolunteerExtensionEnabled['count']) {
     // Prepare sql query for fetch ativity for specific contact.
-    $select = " SELECT activity.*, tgt.contact_id as contact_id, tgt_contact.display_name as display_name, tgt_contact.organization_name as beneficiary_name";
+    $select = "SELECT
+    activity.subject, activity.activity_date_time, activity.duration,
+    assignee.display_name as `assignee`, 
+    beneficiary.display_name as `beneficiary`
+    ";
     $from = " FROM civicrm_activity AS activity";
     
     // Join contacts through activity_contact table:
-    // `record_type_id` int(10) unsigned DEFAULT NULL COMMENT ' 1 assignee, 2 creator, 3 focus or target.'
-    $join = " LEFT JOIN civicrm_activity_contact tgt ON (tgt.activity_id = activity.id AND tgt.record_type_id = 1) ";
-    $join .= " LEFT JOIN civicrm_contact tgt_contact ON tgt.contact_id = tgt_contact.id";
+    // fold rows to get one-per activity:
+    $join = " LEFT JOIN (SELECT 
+    ac.activity_id, c.contact_id as `creator`, a.contact_id as `assignee`, t.contact_id as `target` 
+    FROM civicrm_activity_contact ac 
+    INNER JOIN civicrm_activity_contact a on ac.activity_id = a.activity_id AND a.record_type_id = 1 
+    INNER JOIN civicrm_activity_contact t on ac.activity_id = t.activity_id AND t.record_type_id = 3 
+    INNER JOIN civicrm_activity_contact c on ac.activity_id = c.activity_id AND c.record_type_id = 2 ) activity_contact on activity.id = activity_contact.activity_id
+    ";
+    $join .= " LEFT JOIN civicrm_contact beneficiary on activity_contact.target = beneficiary.id";
+    $join .= " LEFT JOIN civicrm_contact assignee on activity_contact.assignee = assignee.id";
 
     // Where Condition.
     $where = " WHERE activity.activity_type_id = ". LOG_ACTIVITY_TYPE . " ";
     // Add condition for logged in user.
     if(isset($contact_id) && !empty($contact_id)) {
-      $where .= " AND tgt.contact_id = ".$contact_id;
+      $where .= " AND activity_contact.assignee = ".$contact_id;
     }
     // Get Parameters from url. If since date parameter is set add in where condition.
     $parameters = drupal_get_query_parameters();
@@ -157,9 +168,9 @@ function volunteer_hours_report_content($contact_id = "") {
     $result = array();
     while ($dao->fetch()) {
       $htmlData = "";
-      $htmlData .= "<br><b>Beneficiary : </b>".$dao->beneficiary_name;
+      $htmlData .= "<br><b>Beneficiary : </b>".$dao->beneficiary;
       $htmlData .= "<br><b>Subject : </b>".$dao->subject;
-      $htmlData .= "<br><b>Activity Date Time : </b>".$dao->activity_date_time;
+      $htmlData .= "<br><b>Date and Time : </b>".$dao->activity_date_time;
       $htmlData .= "<br><b>Duration : </b>".$dao->duration ." Mins";
       $result[] = $htmlData;
     }
