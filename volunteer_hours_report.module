@@ -81,7 +81,9 @@ function volunteer_hours_report_block_view($delta='') {
     case 'loghours_block' :
       // Check user is already logged in or not.
       if($contact_id != '0' && $contact_id != NULL) {
-        $block['subject'] = t('My Logged Hours');
+        // disabled block subject:
+        //$block['subject'] = t('My Logged Hours');
+
         // Prepare form with date field.
         $form = drupal_get_form('volunteer_hours_report_form');
         // Render date field and then append block result.
