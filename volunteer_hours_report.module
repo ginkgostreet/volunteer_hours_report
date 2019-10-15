@@ -127,7 +127,7 @@ function volunteer_hours_report_content($contact_id = "") {
     
     // Join contacts through activity_contact table:
     // fold rows to get one-per activity:
-    $join = " LEFT JOIN (SELECT 
+    $join = " LEFT JOIN (SELECT DISTINCT
     ac.activity_id, c.contact_id as `creator`, a.contact_id as `assignee`, t.contact_id as `target` 
     FROM civicrm_activity_contact ac 
     INNER JOIN civicrm_activity_contact a on ac.activity_id = a.activity_id AND a.record_type_id = 1 
